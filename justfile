@@ -53,7 +53,7 @@ clean:
 # Run golangci-lint
 [group('quality')]
 lint:
-    golangci-lint run
+    golangci-lint run --timeout=5m
 
 # Format all Go code
 [group('quality')]
@@ -89,6 +89,10 @@ test-v pkg='./...':
 cover:
     go test -coverprofile=coverage.out ./...
     go tool cover -func=coverage.out
+
+# Run the CI verification suite without mutating source files
+[group('test')]
+ci: build cover lint spellcheck
 
 # Run the full local verification suite
 [group('test')]

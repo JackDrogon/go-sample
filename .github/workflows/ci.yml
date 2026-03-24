@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Test
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -21,11 +21,32 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Build
-        run: go build ./cmd/app
+      - name: Install just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
-      - name: Run tests with coverage
-        run: go test -coverprofile=coverage.out ./...
+      - name: Install golangci-lint
+        uses: taiki-e/install-action@v2
+        with:
+          tool: golangci-lint
+
+      - name: Install typos
+        uses: taiki-e/install-action@v2
+        with:
+          tool: typos-cli
+
+      - name: Build via just
+        run: just build
+
+      - name: Run coverage via just
+        run: just cover
+
+      - name: Run lint via just
+        run: just lint
+
+      - name: Run spellcheck via just
+        run: just spellcheck
 
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
@@ -35,25 +56,3 @@ jobs:
           disable_search: true
           handle_no_reports_found: true
           fail_ci_if_error: false
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v2.11.3
-          args: --timeout=5m
-
-      - name: Run typos
-        uses: crate-ci/typos@v1.35.5
